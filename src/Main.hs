@@ -18,7 +18,7 @@ myRegexSplit regExp theString = filter (not . null) (splitRegex (mkRegex regExp)
 removeQuotes :: String -> String
 removeQuotes = filter (not . (`elem` " \"\'"))
 
-capitalise  =  map toUpper
+capitalise = map toUpper
 
 replaceAtIndex n item ls = a ++ (item:b) where (a, (_:b)) = splitAt n ls
 
