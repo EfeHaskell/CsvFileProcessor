@@ -17,4 +17,4 @@ executable daaremployeeuniuqueids
   hs-source-dirs:      src
   main-is:             Main.hs
   default-language:    Haskell2010
-  build-depends:       base >= 4.7 && < 5, cassava, vector, bytestring, regex-compat, containers
+  build-depends:       base >= 4.7 && < 5, cassava, directory, vector, bytestring, regex-compat, containers

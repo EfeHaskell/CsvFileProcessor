@@ -1,45 +1,40 @@
-module Main where
+module Main(main, myRegexSplit) where
 
+import System.Directory (getCurrentDirectory)
 import qualified Data.List as List
 import qualified Data.ByteString as B
 import Data.Char
 import Text.Regex
+import Control.Monad (liftM)
 import qualified Data.ByteString.Char8 as C
 import System.IO (openFile, FilePath, Handle, hPutStr, hGetContents, hClose, IOMode(AppendMode,ReadMode))
 
-parentDir = "/home/eariaroo/Documents/projects/haskell/daaremployeeuniuqueids/"
-source1 = parentDir ++ "DetailedDAARSalariesandDeductions.csv"
-source2 = parentDir ++ "EmployeeUniqueIds.csv"
-output = parentDir ++ "output.csv"
 
-myRegexSplit :: String -> String -> [String]
-myRegexSplit regExp theString = filter (not . null) (splitRegex (mkRegex regExp) theString)
+main :: IO ()
+main = do 
+    parentDir <- (flip (++) "/") <$> getCurrentDirectory
+    putStrLn $ "Parent Directory: " ++ parentDir
+    let source1 = parentDir ++ "DetailedDAARSalariesandDeductions.csv"
 
-removeQuotes :: String -> String
-removeQuotes = filter (not . (`elem` " \"\'"))
-
-capitalise = map toUpper
-
-replaceAtIndex n item ls = a ++ (item:b) where (a, (_:b)) = splitAt n ls
-
-parseSource1 :: IO ()
-parseSource1 = do
     csvLines <- myRegexSplit "\n" <$> (C.unpack <$> B.readFile source1)
     putStrLn $ "Number of lines: " ++ (show . length) csvLines
 
-    outputFileHandle <- openFile output AppendMode
-    mapM_ (processor outputFileHandle) csvLines
-    hClose outputFileHandle
+    let output = parentDir ++ "output2.csv"
 
-processor :: Handle -> String -> IO()
-processor outputFileHandle aCsvLine = do
+    outputFileHandle <- openFile output AppendMode
+    mapM_ (processor outputFileHandle parentDir) csvLines
+    hClose outputFileHandle  
+    putStrLn "All Done"
+
+processor :: Handle -> String -> String -> IO ()
+processor outputFileHandle parentDir aCsvLine = do
     let source1LineColumns =  splitRegex (mkRegex ",") aCsvLine
+    let source2 = parentDir ++ "EmployeeUniqueIds.csv"
 
     uniqueEmployeeIdsCsvLines <- myRegexSplit "\n" <$> (C.unpack <$> B.readFile source2)
     looker outputFileHandle source1LineColumns uniqueEmployeeIdsCsvLines
 
 looker :: Handle -> [String] -> [String] -> IO ()
-
 looker outputFileHandle source1LineColumns [] = return ()
 looker outputFileHandle source1LineColumns (first:rest) = do
     let firstName = (capitalise . removeQuotes) $ source1LineColumns !! 2
@@ -58,5 +53,15 @@ looker outputFileHandle source1LineColumns (first:rest) = do
             looker outputFileHandle source1LineColumns rest
         else looker outputFileHandle source1LineColumns rest
 
-main :: IO ()
-main = parseSource1 >> putStrLn "All Done"
+myRegexSplit :: String -> String -> [String]
+myRegexSplit regExp theString = filter (not . null) (splitRegex (mkRegex regExp) theString)
+
+removeQuotes :: String -> String
+removeQuotes = filter (not . (`elem` " \"\'"))
+
+capitalise = map toUpper
+
+replaceAtIndex n item ls = a ++ (item:b) where (a, (_:b)) = splitAt n ls
+
+pop [] = []
+pop x = take ((length x) - 1) x 
